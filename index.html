@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UN Egypt Creative Film Campaign | حملة الأمم المتحدة في مصر للأفلام الإبداعية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap');
+        
+        :root {
+            --un-blue: #005BBB;
+            --un-dark-green: #081C15;
+            --un-green: #1B4332;
+            --un-light-green: #2D6A4F;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0fdf4; 
+            background-attachment: fixed;
+            scroll-behavior: smooth;
+        }
+
+        /* Arabic font support */
+        body[dir="rtl"] {
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        /* Cinematic Backgrounds */
+        .cinematic-bg {
+            background-image: 
+                linear-gradient(to bottom, rgba(8, 28, 21, 0.85), rgba(8, 28, 21, 0.95)),
+                url('https://images.unsplash.com/photo-1485005886634-12ab4eb48bfa?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        /* Film strip background */
+        .film-strip {
+            background-image: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 20px,
+                rgba(255, 255, 255, 0.1) 20px,
+                rgba(255, 255, 255, 0.1) 24px
+            );
+        }
+
+        /* View Transitions */
+        .view-section {
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .view-section:not(.active) {
+            display: none !important;
+        }
+        .view-section.active {
+            opacity: 1;
+        }
+
+        /* Glassmorphism card effect */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 20px 40px -10px rgba(27, 67, 50, 0.15);
+        }
+
+        /* Custom animation for the loading state */
+        .loader {
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid #ffffff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        
+        body[dir="rtl"] .loader {
+            margin-right: 0;
+            margin-left: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Hover card animations */
+        .topic-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .topic-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px -5px rgba(27, 67, 50, 0.2);
+            border-color: var(--un-light-green);
+        }
+
+        /* Timeline */
+        .timeline-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #1B4332 0%, #74C69D 50%, #1B4332 100%);
+            z-index: 0;
+            transform: translateY(-50%);
+        }
+
+        /* Hide elements based on language */
+        body[dir="rtl"] .lang-en { display: none !important; }
+        body[dir="ltr"] .lang-ar { display: none !important; }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800 relative overflow-x-hidden transition-colors duration-300" dir="rtl" data-lang="ar">
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-40 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Branding / Admin Trigger -->
+                <div class="flex items-center gap-3 cursor-pointer group" id="secretTrigger" title="UN Egypt">
+                    <div class="w-10 h-10 bg-[#1B4332] rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </div>
+                    <div class="font-bold text-[#1B4332] leading-tight hidden sm:block">
+                        <span class="lang-en text-sm tracking-widest uppercase">UN Egypt<br>Creative Film</span>
+                        <span class="lang-ar text-base">الأمم المتحدة في مصر<br>للأفلام الإبداعية</span>
+                    </div>
+                </div>
+
+                <!-- Nav Links & Lang Toggle -->
+                <div class="flex items-center gap-6">
+                    <div class="hidden md:flex gap-6 text-sm font-medium text-gray-600">
+                        <a href="#about" class="hover:text-[#1B4332] transition-colors"><span class="lang-en">The Idea</span><span class="lang-ar">الفكرة</span></a>
+                        <a href="#topics" class="hover:text-[#1B4332] transition-colors"><span class="lang-en">Topics</span><span class="lang-ar">المحاور</span></a>
+                        <a href="#dates" class="hover:text-[#1B4332] transition-colors"><span class="lang-en">Dates</span><span class="lang-ar">المواعيد</span></a>
+                    </div>
+                    <button class="register-nav-btn bg-[#1B4332] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-[#081C15] transition-all shadow-md">
+                        <span class="lang-en">Register Now</span><span class="lang-ar">سجّل الآن</span>
+                    </button>
+                    <button id="langToggle" class="bg-gray-100 hover:bg-gray-200 text-[#1B4332] px-4 py-2 rounded-lg shadow-sm font-medium transition-all flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                        </svg>
+                        <span id="langText" class="text-sm">English</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ========================================== -->
+    <!-- VIEW: LANDING PAGE -->
+    <!-- ========================================== -->
+    <main id="view-landing" class="view-section active pt-20 flex flex-col min-h-screen">
+        
+        <!-- 1. HERO SECTION -->
+        <section class="relative min-h-[90vh] flex items-center justify-center cinematic-bg overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-8 film-strip opacity-30"></div>
+            <div class="absolute bottom-0 left-0 w-full h-8 film-strip opacity-30"></div>
+            
+            <div class="relative z-10 max-w-5xl mx-auto px-4 text-center text-white">
+                <p class="text-[#74C69D] font-semibold tracking-[0.2em] uppercase text-sm mb-6 drop-shadow-md">
+                    <span class="lang-en">UN Egypt Creative Film Campaign 2026</span>
+                    <span class="lang-ar">حملة الأمم المتحدة في مصر للأفلام الإبداعية ٢٠٢٦</span>
+                </p>
+                
+                <h1 class="text-5xl md:text-7xl font-bold mb-8 leading-tight drop-shadow-xl" style="text-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+                    <span class="lang-en">"If it existed in 2045...<br><span class="text-[#95D5B2]">What if it didn't?</span>"</span>
+                    <span class="lang-ar leading-[1.3]">"إن وُجِــــــــــدَ في 2045...<br><span class="text-[#95D5B2]">وَإِنْ لَمْ يُوجَدْ؟</span>"</span>
+                </h1>
+                
+                <p class="text-lg md:text-xl text-gray-200 mb-12 max-w-3xl mx-auto font-light leading-relaxed">
+                    <span class="lang-en">Create a 60–120 second film connecting today's reality with the future of 2045. Leave a message for future generations.</span>
+                    <span class="lang-ar">اصنع فيلماً قصيراً من 60 إلى 120 ثانية يربط واقع اليوم بمستقبل عام 2045، واترك رسالتك للأجيال القادمة.</span>
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button class="register-nav-btn bg-[#74C69D] hover:bg-[#52B788] text-[#081C15] px-8 py-4 rounded-full font-bold text-lg transition-all shadow-[0_0_20px_rgba(116,198,157,0.4)] hover:shadow-[0_0_30px_rgba(116,198,157,0.6)] hover:-translate-y-1 flex items-center justify-center gap-2">
+                        <span class="lang-en">Register Now</span><span class="lang-ar">سجّل الآن</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rtl:rotate-180" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <a href="#about" class="bg-white/10 hover:bg-white/20 border border-white/30 text-white px-8 py-4 rounded-full font-semibold text-lg transition-all backdrop-blur-sm flex items-center justify-center">
+                        <span class="lang-en">Learn More</span><span class="lang-ar">اعرف المزيد</span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Scroll indicator -->
+            <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce opacity-70">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+            </div>
+        </section>
+
+        <!-- 2. THE IDEA -->
+        <section id="about" class="py-24 bg-white relative overflow-hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-5xl font-bold text-[#1B4332] mb-6">
+                        <span class="lang-en">Start from Today's Reality</span>
+                        <span class="lang-ar">ابدأ من واقع اليوم</span>
+                    </h2>
+                    <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                        <span class="lang-en">Begin with a real story, issue, opportunity, or situation from 2026 and imagine how it could shape life in 2045.</span>
+                        <span class="lang-ar">ينطلق الفيلم من قصة حقيقية أو فرصة في عام 2026، ثم يتخيل كيف يمكن أن تبدو الحياة في عام 2045.</span>
+                    </p>
+                </div>
+
+                <!-- Timeline Visual -->
+                <div class="relative py-12 max-w-4xl mx-auto">
+                    <div class="timeline-line hidden md:block"></div>
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-8 md:gap-0 relative z-10">
+                        <div class="bg-[#F4F7F5] border-2 border-[#1B4332] rounded-full w-32 h-32 flex flex-col items-center justify-center shadow-lg relative bg-white">
+                            <span class="text-2xl font-bold text-[#1B4332]">2026</span>
+                            <span class="text-xs font-semibold text-gray-500 uppercase mt-1"><span class="lang-en">Today</span><span class="lang-ar">اليوم</span></span>
+                        </div>
+                        
+                        <div class="bg-[#1B4332] rounded-2xl p-4 w-48 text-center shadow-xl text-white transform hover:scale-105 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto mb-2 text-[#74C69D]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            <span class="font-bold block text-sm"><span class="lang-en">A Real Story</span><span class="lang-ar">قصة حقيقية</span></span>
+                        </div>
+
+                        <div class="bg-[#F4F7F5] border-2 border-[#1B4332] rounded-full w-32 h-32 flex flex-col items-center justify-center shadow-lg relative bg-white">
+                            <span class="text-2xl font-bold text-[#1B4332]">2045</span>
+                            <span class="text-xs font-semibold text-[#52B788] uppercase mt-1"><span class="lang-en">Future</span><span class="lang-ar">المستقبل</span></span>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-[#2D6A4F] to-[#1B4332] rounded-2xl p-4 w-48 text-center shadow-xl text-white transform hover:scale-105 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mx-auto mb-2 text-[#95D5B2]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            </svg>
+                            <span class="font-bold block text-sm"><span class="lang-en">Your Vision</span><span class="lang-ar">رؤيتك</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. THE CHALLENGE -->
+        <section class="py-20 bg-[#F4F7F5] border-y border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-white rounded-3xl p-8 md:p-12 shadow-xl border border-gray-100 flex flex-col md:flex-row gap-12 items-center">
+                    <div class="w-full md:w-1/2">
+                        <div class="inline-flex items-center justify-center p-3 bg-red-100 rounded-xl mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h2 class="text-3xl font-bold text-[#1B4332] mb-6">
+                            <span class="lang-en">The Challenge</span>
+                            <span class="lang-ar">تفاصيل التحدي</span>
+                        </h2>
+                        <ul class="space-y-4 text-lg text-gray-600">
+                            <li class="flex items-start gap-3">
+                                <svg class="h-6 w-6 text-[#52B788] mt-1 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                <span><span class="lang-en">Create a short film between <strong>60 and 120 seconds</strong>.</span><span class="lang-ar">مدة الفيلم: من <strong>60 إلى 120 ثانية</strong>.</span></span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <svg class="h-6 w-6 text-[#52B788] mt-1 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                <span><span class="lang-en">Show what could happen if today's opportunities are developed, or if challenges remain unresolved.</span><span class="lang-ar">أظهر ماذا يحدث إذا تطورت الفرص والحلول التي نتبناها اليوم... أو إذا لم توجد.</span></span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <svg class="h-6 w-6 text-[#52B788] mt-1 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                <span><span class="lang-en">End with a powerful message for future generations.</span><span class="lang-ar">اترك رسالة واضحة ومؤثرة لشباب المستقبل.</span></span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="w-full md:w-1/2 relative">
+                        <div class="aspect-video bg-gray-900 rounded-2xl overflow-hidden shadow-2xl border-4 border-gray-800 relative group flex items-center justify-center">
+                            <!-- Film strip graphic placeholder -->
+                            <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center opacity-60 group-hover:opacity-80 transition-opacity"></div>
+                            <div class="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/50 z-10">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. SIX TOPICS -->
+        <section id="topics" class="py-24 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-5xl font-bold text-[#1B4332] mb-6">
+                        <span class="lang-en">Choose Your Topic</span>
+                        <span class="lang-ar">اختر محور فيلمك</span>
+                    </h2>
+                    <p class="text-xl text-gray-500">
+                        <span class="lang-en">Your film must focus on ONE of the following six campaign pillars:</span>
+                        <span class="lang-ar">اختر واحداً من محاور الحملة الستة التالية لبناء قصتك:</span>
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Topic 1 -->
+                    <div class="topic-card bg-gray-50 rounded-2xl p-8 border border-gray-100 flex flex-col items-center text-center">
+                        <div class="w-16 h-16 bg-[#EAF4F0] rounded-full flex items-center justify-center text-[#1B4332] mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-3"><span class="lang-en">People</span><span class="lang-ar">الناس</span></h3>
+                        <p class="text-gray-600"><span class="lang-en">Social development, equality, and human well-being.</span><span class="lang-ar">التنمية الاجتماعية، المساواة، ورفاهية الإنسان.</span></p>
+                    </div>
+                    <!-- Topic 2 -->
+                    <div class="topic-card bg-gray-50 rounded-2xl p-8 border border-gray-100 flex flex-col items-center text-center">
+                        <div class="w-16 h-16 bg-[#EAF4F0] rounded-full flex items-center justify-center text-[#1B4332] mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-3"><span class="lang-en">Prosperity</span><span class="lang-ar">الازدهار</span></h3>
+                        <p class="text-gray-600"><span class="lang-en">Economic growth, innovation, and thriving communities.</span><span class="lang-ar">النمو الاقتصادي، الابتكار، والمجتمعات المزدهرة.</span></p>
+                    </div>
+                    <!-- Topic 3 -->
+                    <div class="topic-card bg-gray-50 rounded-2xl p-8 border border-gray-100 flex flex-col items-center text-center">
+                        <div class="w-16 h-16 bg-[#EAF4F0] rounded-full flex items-center justify-center text-[#1B4332] mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-3"><span class="lang-en">Planet</span><span class="lang-ar">الكوكب</span></h3>
+                        <p class="text-gray-600"><span class="lang-en">Environment, climate action, and sustainable ecosystems.</span><span class="lang-ar">البيئة، العمل المناخي، والأنظمة البيئية المستدامة.</span></p>
+                    </div>
+                    <!-- Topic 4 -->
+                    <div class="topic-card bg-gray-50 rounded-2xl p-8 border border-gray-100 flex flex-col items-center text-center">
+                        <div class="w-16 h-16 bg-[#EAF4F0] rounded-full flex items-center justify-center text-[#1B4332] mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-3"><span class="lang-en">Governance</span><span class="lang-ar">الحوكمة</span></h3>
+                        <p class="text-gray-600"><span class="lang-en">Institutions, justice, peace, and systemic transparency.</span><span class="lang-ar">المؤسسات، العدالة، السلام، والشفافية.</span></p>
+                    </div>
+                    <!-- Topic 5 -->
+                    <div class="topic-card bg-gray-50 rounded-2xl p-8 border border-gray-100 flex flex-col items-center text-center">
+                        <div class="w-16 h-16 bg-[#EAF4F0] rounded-full flex items-center justify-center text-[#1B4332] mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-3"><span class="lang-en">Women & Girls</span><span class="lang-ar">النساء والفتيات</span></h3>
+                        <p class="text-gray-600"><span class="lang-en">Empowerment, rights, and gender equality in the future.</span><span class="lang-ar">التمكين، الحقوق، والمساواة بين الجنسين في المستقبل.</span></p>
+                    </div>
+                    <!-- Topic 6 -->
+                    <div class="topic-card bg-gray-50 rounded-2xl p-8 border border-gray-100 flex flex-col items-center text-center">
+                        <div class="w-16 h-16 bg-[#EAF4F0] rounded-full flex items-center justify-center text-[#1B4332] mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-3"><span class="lang-en">Information Integrity</span><span class="lang-ar">سلامة المعلومات</span></h3>
+                        <p class="text-gray-600"><span class="lang-en">Truth, digital rights, and the fight against misinformation.</span><span class="lang-ar">الحقيقة، الحقوق الرقمية، ومكافحة المعلومات المضللة.</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. HOW TO PARTICIPATE & 6. KEY DATES -->
+        <section id="dates" class="py-20 bg-[#1B4332] text-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-16">
+                
+                <!-- Steps -->
+                <div>
+                    <h2 class="text-3xl font-bold mb-8 text-[#95D5B2]">
+                        <span class="lang-en">How to Participate</span>
+                        <span class="lang-ar">كيفية المشاركة</span>
+                    </h2>
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-4">
+                            <div class="text-2xl font-bold text-[#74C69D] w-12">01</div>
+                            <div class="text-lg"><span class="lang-en">Choose your topic</span><span class="lang-ar">اختر المحور</span></div>
+                        </div>
+                        <div class="w-full h-px bg-white/10"></div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-2xl font-bold text-[#74C69D] w-12">02</div>
+                            <div class="text-lg"><span class="lang-en">Find your story</span><span class="lang-ar">ابحث عن قصتك</span></div>
+                        </div>
+                        <div class="w-full h-px bg-white/10"></div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-2xl font-bold text-[#74C69D] w-12">03</div>
+                            <div class="text-lg"><span class="lang-en">Imagine 2045</span><span class="lang-ar">تخيل 2045</span></div>
+                        </div>
+                        <div class="w-full h-px bg-white/10"></div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-2xl font-bold text-[#74C69D] w-12">04</div>
+                            <div class="text-lg"><span class="lang-en">Create your 60–120s film</span><span class="lang-ar">اصنع فيلمك من 60 لـ 120 ثانية</span></div>
+                        </div>
+                        <div class="w-full h-px bg-white/10"></div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-2xl font-bold text-[#74C69D] w-12">05</div>
+                            <div class="text-lg"><span class="lang-en">Submit your participation</span><span class="lang-ar">قدم مشاركتك عبر الموقع</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dates -->
+                <div class="bg-white/5 p-8 rounded-3xl border border-white/10">
+                    <h2 class="text-3xl font-bold mb-8 text-[#95D5B2]">
+                        <span class="lang-en">Key Dates</span>
+                        <span class="lang-ar">تواريخ هامة</span>
+                    </h2>
+                    
+                    <div class="mb-10 flex gap-6 items-start">
+                        <div class="bg-[#74C69D] text-[#081C15] rounded-xl p-4 text-center shrink-0 w-24">
+                            <div class="text-sm font-bold uppercase"><span class="lang-en">OCT</span><span class="lang-ar">أكتوبر</span></div>
+                            <div class="text-3xl font-black">5</div>
+                            <div class="text-xs font-semibold">2026</div>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2"><span class="lang-en">Submission Deadline</span><span class="lang-ar">آخر موعد للتقديم</span></h4>
+                            <p class="text-gray-300 text-sm"><span class="lang-en">Ensure your film and details are submitted before this date.</span><span class="lang-ar">تأكد من إرسال فيلمك وبياناتك قبل هذا التاريخ.</span></p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-6 items-start">
+                        <div class="bg-white text-[#1B4332] rounded-xl p-4 text-center shrink-0 w-24">
+                            <div class="text-sm font-bold uppercase"><span class="lang-en">OCT</span><span class="lang-ar">أكتوبر</span></div>
+                            <div class="text-3xl font-black">24</div>
+                            <div class="text-xs font-semibold">2026</div>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2"><span class="lang-en">Screening & Awards</span><span class="lang-ar">العرض وتوزيع الجوائز</span></h4>
+                            <p class="text-gray-300 text-sm"><span class="lang-en">Selected films screened during the UN Day 2026 celebration.</span><span class="lang-ar">تعرض الأفلام المختارة خلال احتفالية يوم الأمم المتحدة 2026.</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. FINAL CTA -->
+        <section class="py-32 text-center relative overflow-hidden cinematic-bg">
+            <div class="absolute inset-0 bg-[#081C15]/80"></div>
+            <div class="relative z-10 max-w-4xl mx-auto px-4">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-10">
+                    <span class="lang-en">The future begins with a story told today.</span>
+                    <span class="lang-ar leading-tight">المستقبل يبدأ من قصة تُروى اليوم.</span>
+                </h2>
+                <button class="register-nav-btn bg-[#74C69D] hover:bg-[#52B788] text-[#081C15] px-10 py-5 rounded-full font-bold text-xl transition-all shadow-[0_0_20px_rgba(116,198,157,0.4)] hover:scale-105 flex items-center justify-center gap-3 mx-auto">
+                    <span class="lang-en">Register Now to Submit</span><span class="lang-ar">سجّل الآن للمشاركة</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                </button>
+            </div>
+        </section>
+        
+        <!-- Footer -->
+        <footer class="bg-gray-900 text-gray-500 py-8 text-center text-sm border-t border-gray-800 mt-auto">
+            <p><span class="lang-en">&copy; 2026 UN Egypt Creative Film Campaign.</span><span class="lang-ar">&copy; 2026 حملة الأمم المتحدة في مصر للأفلام الإبداعية.</span></p>
+        </footer>
+    </main>
+
+    <!-- ========================================== -->
+    <!-- VIEW: REGISTRATION GATEWAY -->
+    <!-- ========================================== -->
+    <main id="view-gateway" class="view-section min-h-screen pt-20 pb-12 flex items-center justify-center cinematic-bg relative">
+        <div class="absolute inset-0 bg-[#081C15]/70"></div>
+        
+        <div class="w-full max-w-5xl px-4 relative z-10">
+            <!-- Back Button -->
+            <button id="backToLandingBtn" class="mb-6 text-white/80 hover:text-white flex items-center gap-2 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rtl:rotate-180" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                </svg>
+                <span class="font-medium"><span class="lang-en">Back to Campaign</span><span class="lang-ar">العودة للحملة</span></span>
+            </button>
+
+            <!-- The Gateway Card -->
+            <div class="bg-white rounded-2xl w-full shadow-2xl overflow-hidden flex flex-col md:flex-row border border-gray-100">
+                
+                <!-- Left Column: Branding -->
+                <div class="w-full md:w-5/12 bg-[#1B4332] relative overflow-hidden flex flex-col justify-between p-10 text-white min-h-[300px] md:min-h-[600px]">
+                    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1485005886634-12ab4eb48bfa?q=80&w=600&auto=format&fit=crop')] bg-cover bg-center opacity-10 mix-blend-overlay"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm mb-6 border border-white/20">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#95D5B2]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                            </svg>
+                        </div>
+                        <h1 class="text-3xl md:text-4xl font-bold mb-4 leading-tight">
+                            <span class="lang-en">Registration Gateway</span>
+                            <span class="lang-ar">بوابة التسجيل</span>
+                        </h1>
+                        <p class="text-[#95D5B2] text-sm md:text-base leading-relaxed">
+                            <span class="lang-en">Complete your details to continue to the official submission link.</span>
+                            <span class="lang-ar">أكمل بياناتك للانتقال إلى رابط المشاركة الرسمي.</span>
+                        </p>
+                    </div>
+
+                    <div class="relative z-10 mt-auto pt-12">
+                        <div class="text-xs text-[#74C69D] uppercase tracking-wider font-semibold">
+                            <span class="lang-en">UN Egypt Campaign 2026</span>
+                            <span class="lang-ar">حملة الأمم المتحدة في مصر ٢٠٢٦</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Form -->
+                <div class="w-full md:w-7/12 p-8 md:p-12 flex flex-col justify-center bg-white">
+                    <div class="max-w-md w-full mx-auto">
+                        <h2 class="text-2xl font-bold text-[#1B4332] mb-8">
+                            <span class="lang-en">Participant Details</span>
+                            <span class="lang-ar">بيانات المشارك</span>
+                        </h2>
+
+                        <form id="accessForm" class="space-y-5">
+                            <!-- Field: Full Name -->
+                            <div>
+                                <label for="fullName" class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                    <span class="lang-en">Full Name</span><span class="lang-ar">الاسم الكامل</span>
+                                </label>
+                                <input type="text" id="fullName" required 
+                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#2D6A4F] focus:border-[#2D6A4F] focus:bg-white outline-none transition-all text-gray-800 placeholder-gray-400"
+                                    data-placeholder-en="e.g. Jane Doe" data-placeholder-ar="مثال: أحمد محمد">
+                            </div>
+                            
+                            <!-- Field: Model / University -->
+                            <div>
+                                <label for="modelUniversity" class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                    <span class="lang-en">Model / University</span><span class="lang-ar">الموديل / الجامعة</span>
+                                </label>
+                                <input type="text" id="modelUniversity" required 
+                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#2D6A4F] focus:border-[#2D6A4F] focus:bg-white outline-none transition-all text-gray-800 placeholder-gray-400"
+                                    data-placeholder-en="e.g. Cairo University" data-placeholder-ar="مثال: جامعة القاهرة">
+                            </div>
+
+                            <!-- Field: Phone Number -->
+                            <div>
+                                <label for="phone" class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                    <span class="lang-en">Phone Number</span><span class="lang-ar">رقم الهاتف</span>
+                                </label>
+                                <input type="tel" id="phone" required dir="ltr"
+                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#2D6A4F] focus:border-[#2D6A4F] focus:bg-white outline-none transition-all text-gray-800 text-left placeholder-gray-400"
+                                    data-placeholder-en="e.g. +201000000000" data-placeholder-ar="+201000000000">
+                            </div>
+
+                            <!-- Field: Email -->
+                            <div>
+                                <label for="email" class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                    <span class="lang-en">Email Address</span><span class="lang-ar">البريد الإلكتروني</span>
+                                </label>
+                                <input type="email" id="email" required dir="ltr"
+                                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#2D6A4F] focus:border-[#2D6A4F] focus:bg-white outline-none transition-all text-gray-800 text-left placeholder-gray-400"
+                                    data-placeholder-en="you@example.com" data-placeholder-ar="you@example.com">
+                            </div>
+
+                            <div class="pt-4">
+                                <button type="submit" id="submitBtn" 
+                                    class="w-full bg-[#1B4332] hover:bg-[#081C15] text-white font-semibold py-3.5 px-4 rounded-lg transition-colors flex justify-center items-center group">
+                                    <span id="btnText">
+                                        <span class="lang-en inline">Register & Continue</span>
+                                        <span class="lang-ar inline">التسجيل والمتابعة</span>
+                                    </span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform rtl:rotate-180 rtl:ml-0 rtl:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" id="arrowIcon">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Status Message -->
+                        <div id="statusMessage" class="hidden mt-6 text-center text-sm font-medium p-4 rounded-lg"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ========================================== -->
+    <!-- VIEW: ADMIN DASHBOARD (HIDDEN)             -->
+    <!-- ========================================== -->
+    <div id="adminSection" class="hidden fixed inset-0 z-50 bg-gray-900/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-xl w-full max-w-6xl h-[85vh] flex flex-col overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300" id="adminModal">
+            
+            <!-- Admin Header -->
+            <div class="bg-[#081C15] p-5 flex justify-between items-center text-white">
+                <div class="flex items-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#95D5B2]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <h2 class="text-lg font-semibold tracking-wide">Campaign Registrations Data</h2>
+                </div>
+                <div class="flex gap-3">
+                    <button id="refreshAdminBtn" class="p-2 hover:bg-white/10 rounded-lg transition-colors text-sm flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        Refresh
+                    </button>
+                    <button id="closeAdminBtn" class="p-2 hover:bg-red-500/20 text-red-300 rounded-lg transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Admin Toolbar -->
+            <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center flex-wrap gap-4" dir="ltr">
+                <div class="relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-3 top-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input type="text" id="adminSearch" placeholder="Search name or email..." class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#1B4332] w-64">
+                </div>
+                <div class="flex items-center gap-3">
+                    <span id="adminTotalCount" class="text-sm text-gray-500 font-medium">Total: 0</span>
+                    <button id="exportCsvBtn" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Export CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Admin Status / Error -->
+            <div id="adminStatusMsg" class="hidden p-3 text-center text-sm font-medium"></div>
+
+            <!-- Data Table -->
+            <div class="flex-1 overflow-auto p-0 bg-white" dir="ltr">
+                <table class="w-full text-left border-collapse min-w-[800px]">
+                    <thead class="bg-gray-50 sticky top-0 border-b border-gray-200 z-10">
+                        <tr>
+                            <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</th>
+                            <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Model / University</th>
+                            <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Phone</th>
+                            <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+                            <th class="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminTableBody" class="divide-y divide-gray-100">
+                        <!-- Data injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="bg-yellow-50 p-3 text-xs text-yellow-800 text-center border-t border-yellow-200 flex justify-center items-center gap-2" dir="ltr">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                Security Note: This UI relies on a hidden trigger for demonstration. Production admin access should be secured via Supabase Auth / RLS.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ==========================================
+            // 1. CONFIGURATION & SUPABASE SETUP
+            // ==========================================
+            
+            // !!! IMPORTANT DEVELOPER NOTE !!!
+            // Replace these with your actual Supabase project URL and anon key.
+            // Create a table named 'registrations' with columns: 
+            // id (uuid/int8), full_name (text), model_university (text), phone (text), email (text), created_at (timestamp)
+            const SUPABASE_URL = "YOUR_SUPABASE_URL";
+            const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+            
+            let supabase = null;
+            try {
+                if(SUPABASE_URL !== "YOUR_SUPABASE_URL") {
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                } else {
+                    console.warn("Supabase not configured. Please add URL and KEY.");
+                }
+            } catch(e) {
+                console.error("Failed to initialize Supabase client.", e);
+            }
+
+            const TARGET_URL = "https://bit.ly/4xsF0Vn"; 
+
+            // ==========================================
+            // 2. LANGUAGE SYSTEM & UI STATE
+            // ==========================================
+            const langToggle = document.getElementById('langToggle');
+            const langText = document.getElementById('langText');
+            const body = document.body;
+            let currentLang = 'ar';
+
+            function updatePlaceholders() {
+                document.querySelectorAll('input').forEach(input => {
+                    if (input.hasAttribute(`data-placeholder-${currentLang}`)) {
+                        input.setAttribute('placeholder', input.getAttribute(`data-placeholder-${currentLang}`));
+                    }
+                });
+            }
+
+            langToggle.addEventListener('click', () => {
+                currentLang = currentLang === 'en' ? 'ar' : 'en';
+                
+                // Update HTML attributes
+                body.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+                body.setAttribute('data-lang', currentLang);
+                
+                // Update toggle button text
+                langText.textContent = currentLang === 'en' ? 'العربية' : 'English';
+                
+                updatePlaceholders();
+            });
+
+            // Init placeholders on load
+            updatePlaceholders();
+
+            // ==========================================
+            // 3. VIEW TRANSITIONS (LANDING <-> GATEWAY)
+            // ==========================================
+            const viewLanding = document.getElementById('view-landing');
+            const viewGateway = document.getElementById('view-gateway');
+            const registerBtns = document.querySelectorAll('.register-nav-btn');
+            const backBtn = document.getElementById('backToLandingBtn');
+
+            function showGateway() {
+                window.scrollTo(0, 0);
+                viewLanding.classList.remove('active');
+                setTimeout(() => {
+                    viewGateway.classList.add('active');
+                }, 100);
+            }
+
+            function showLanding() {
+                window.scrollTo(0, 0);
+                viewGateway.classList.remove('active');
+                setTimeout(() => {
+                    viewLanding.classList.add('active');
+                }, 100);
+            }
+
+            registerBtns.forEach(btn => btn.addEventListener('click', showGateway));
+            backBtn.addEventListener('click', showLanding);
+
+            // ==========================================
+            // 4. REGISTRATION FORM LOGIC
+            // ==========================================
+            const form = document.getElementById('accessForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const arrowIcon = document.getElementById('arrowIcon');
+            const statusMessage = document.getElementById('statusMessage');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault(); 
+                
+                // Get Field Values
+                const fullName = document.getElementById('fullName').value.trim();
+                const modelUniversity = document.getElementById('modelUniversity').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                const email = document.getElementById('email').value.trim();
+
+                if(!fullName || !modelUniversity || !phone || !email) return;
+
+                // UI Update: Loading State
+                const loadingTextEn = 'Processing...';
+                const loadingTextAr = 'جاري المعالجة...';
+                
+                arrowIcon.style.display = 'none';
+                btnText.innerHTML = `<div class="loader"></div> <span class="lang-en inline">${currentLang === 'en' ? loadingTextEn : ''}</span><span class="lang-ar inline">${currentLang === 'ar' ? loadingTextAr : ''}</span>`;
+                
+                // Enforce styling text manually since innerHTML wiped out the language spans
+                btnText.innerHTML = `<div class="loader"></div> ${currentLang === 'en' ? loadingTextEn : loadingTextAr}`;
+                
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-90', 'cursor-not-allowed');
+                statusMessage.classList.add('hidden');
+                statusMessage.className = "mt-6 text-center text-sm font-medium p-4 rounded-lg"; // reset classes
+
+                // SUPABASE INSERT
+                if(supabase) {
+                    try {
+                        const { data, error } = await supabase
+                            .from('registrations')
+                            .insert([
+                                { 
+                                    full_name: fullName, 
+                                    model_university: modelUniversity,
+                                    phone: phone,
+                                    email: email
+                                }
+                            ]);
+
+                        if (error) {
+                            // Check for unique constraint violation (duplicate email usually code 23505)
+                            if(error.code === '23505') {
+                                throw new Error("duplicate");
+                            }
+                            throw error;
+                        }
+
+                        // Success Path
+                        handleSuccess();
+                    } catch (error) {
+                        console.error('Supabase Error:', error);
+                        let errorMsg = currentLang === 'en' ? 'An error occurred. Please try again.' : 'حدث خطأ. يرجى المحاولة مرة أخرى.';
+                        if(error.message === 'duplicate') {
+                            errorMsg = currentLang === 'en' ? 'This email is already registered.' : 'هذا البريد الإلكتروني مسجل بالفعل.';
+                        }
+                        handleError(errorMsg);
+                    }
+                } else {
+                    // Fallback block if Dev forgot to put Supabase keys, purely to prevent app freezing in preview.
+                    // In real environment, this should just error out if supabase isn't configured.
+                    handleError(currentLang === 'en' ? 'System error: Database not connected.' : 'خطأ بالنظام: قاعدة البيانات غير متصلة.');
+                }
+            });
+
+            function handleSuccess() {
+                const successText = currentLang === 'en' ? 'Redirecting...' : 'جاري التوجيه...';
+                btnText.innerHTML = successText;
+                submitBtn.classList.replace('bg-[#1B4332]', 'bg-[#2D6A4F]');
+                
+                const msgText = currentLang === 'en' 
+                    ? 'Registration successful! Redirecting you to the submission link...' 
+                    : 'تم التسجيل بنجاح! جاري تحويلك إلى رابط المشاركة...';
+                
+                statusMessage.textContent = msgText;
+                statusMessage.classList.remove('hidden');
+                statusMessage.classList.add('bg-[#EAF4F0]', 'text-[#1B4332]');
+
+                // Redirect strictly to the exact TARGET_URL
+                setTimeout(() => {
+                    window.location.href = TARGET_URL;
+                }, 1500);
+            }
+
+            function handleError(msg) {
+                // Reset Button
+                btnText.innerHTML = currentLang === 'en' ? 'Register & Continue' : 'التسجيل والمتابعة';
+                arrowIcon.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-90', 'cursor-not-allowed');
+                
+                // Show Error
+                statusMessage.textContent = msg;
+                statusMessage.classList.remove('hidden');
+                statusMessage.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
+            }
+
+
+            // ==========================================
+            // 5. ADMIN PANEL & DATA EXPORT
+            // ==========================================
+            const secretTrigger = document.getElementById('secretTrigger');
+            const adminSection = document.getElementById('adminSection');
+            const adminModal = document.getElementById('adminModal');
+            const closeAdminBtn = document.getElementById('closeAdminBtn');
+            const refreshAdminBtn = document.getElementById('refreshAdminBtn');
+            const adminTableBody = document.getElementById('adminTableBody');
+            const exportCsvBtn = document.getElementById('exportCsvBtn');
+            const adminSearch = document.getElementById('adminSearch');
+            const adminTotalCount = document.getElementById('adminTotalCount');
+            const adminStatusMsg = document.getElementById('adminStatusMsg');
+            
+            let clickCount = 0;
+            let clickTimeout;
+            let currentAdminData = [];
+
+            // Secret trigger logic (5 clicks)
+            secretTrigger.addEventListener('click', () => {
+                clickCount++;
+                clearTimeout(clickTimeout);
+                
+                if (clickCount >= 5) {
+                    const pwd = prompt(currentLang === 'en' ? "Enter Admin Password:" : "أدخل كلمة مرور المسؤول:");
+                    if (pwd === "FACL#egyptian4life") {
+                        openAdmin();
+                    } else {
+                        alert(currentLang === 'en' ? "Access Denied." : "تم رفض الوصول.");
+                    }
+                    clickCount = 0;
+                }
+
+                clickTimeout = setTimeout(() => {
+                    clickCount = 0;
+                }, 1000); 
+            });
+
+            function openAdmin() {
+                adminSection.classList.remove('hidden');
+                setTimeout(() => {
+                    adminSection.classList.remove('opacity-0');
+                    adminModal.classList.remove('scale-95');
+                    adminModal.classList.add('scale-100');
+                }, 10);
+                fetchAdminData();
+            }
+
+            function closeAdmin() {
+                adminSection.classList.add('opacity-0');
+                adminModal.classList.remove('scale-100');
+                adminModal.classList.add('scale-95');
+                setTimeout(() => {
+                    adminSection.classList.add('hidden');
+                }, 300);
+            }
+
+            closeAdminBtn.addEventListener('click', closeAdmin);
+            adminSection.addEventListener('click', (e) => {
+                if (e.target === adminSection) closeAdmin();
+            });
+
+            // Fetch from Supabase
+            async function fetchAdminData() {
+                adminTableBody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-400">Loading data...</td></tr>';
+                adminStatusMsg.classList.add('hidden');
+                
+                if(!supabase) {
+                    adminTableBody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500">Supabase not configured in code.</td></tr>';
+                    return;
+                }
+
+                try {
+                    const { data, error } = await supabase
+                        .from('registrations')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+
+                    if (error) throw error;
+
+                    currentAdminData = data || [];
+                    renderAdminTable(currentAdminData);
+                } catch (error) {
+                    console.error('Fetch Error:', error);
+                    adminTableBody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-red-500">Failed to load data.</td></tr>';
+                }
+            }
+
+            refreshAdminBtn.addEventListener('click', fetchAdminData);
+
+            function renderAdminTable(data) {
+                adminTableBody.innerHTML = '';
+                adminTotalCount.textContent = `Total: ${data.length}`;
+                
+                if (data.length === 0) {
+                    adminTableBody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-400">No records found.</td></tr>';
+                    return;
+                }
+
+                data.forEach(record => {
+                    const date = new Date(record.created_at).toLocaleString();
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-gray-50 transition-colors";
+                    row.innerHTML = `
+                        <td class="p-4 border-b text-sm text-gray-500">#${record.id || '-'}</td>
+                        <td class="p-4 border-b text-sm font-medium text-gray-900">${record.full_name || ''}</td>
+                        <td class="p-4 border-b text-sm text-gray-600">${record.model_university || ''}</td>
+                        <td class="p-4 border-b text-sm text-gray-600">${record.phone || ''}</td>
+                        <td class="p-4 border-b text-sm text-gray-600">${record.email || ''}</td>
+                        <td class="p-4 border-b text-sm text-gray-400 whitespace-nowrap">${date}</td>
+                    `;
+                    adminTableBody.appendChild(row);
+                });
+            }
+
+            // Search filter
+            adminSearch.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = currentAdminData.filter(item => 
+                    (item.full_name && item.full_name.toLowerCase().includes(term)) || 
+                    (item.email && item.email.toLowerCase().includes(term))
+                );
+                renderAdminTable(filtered);
+            });
+
+            // CSV Export
+            exportCsvBtn.addEventListener('click', () => {
+                if(currentAdminData.length === 0) {
+                    alert("No data to export.");
+                    return;
+                }
+
+                // Headers
+                const headers = ['ID', 'Full Name', 'Model / University', 'Phone', 'Email', 'Registration Date'];
+                
+                // Rows
+                const rows = currentAdminData.map(item => [
+                    item.id,
+                    `"${(item.full_name || '').replace(/"/g, '""')}"`, // escape quotes and wrap in quotes for CSV safety
+                    `"${(item.model_university || '').replace(/"/g, '""')}"`,
+                    `"${(item.phone || '').replace(/"/g, '""')}"`,
+                    `"${(item.email || '').replace(/"/g, '""')}"`,
+                    `"${new Date(item.created_at).toLocaleString()}"`
+                ]);
+
+                const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
+                    + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `un_campaign_registrations_${new Date().toISOString().split('T')[0]}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+        });
+    </script>
+</body>
+</html>
+
